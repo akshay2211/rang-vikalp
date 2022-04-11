@@ -21,32 +21,136 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.ak1.rangvikalp.custompicker.HueRadialPicker
+
 
 @Composable
 fun RangVikalp(
     isVisible: Boolean,
     rowElementsCount: Int = 8,
-    colors: List<Color>,
+    colors: List<List<Color>> = colorArray,
     clickedColor: (Color) -> Unit
 ) {
+    val colorIntensity = 5
     val density = LocalDensity.current
-    val defaultColor = remember {
+    var defaultColor by remember {
+        mutableStateOf(colors[0][colorIntensity])
+    }
+    var defaultRow by remember {
         mutableStateOf(colors[0])
     }
+    var subColorsRowVisibility by remember {
+        mutableStateOf(true)
+    }
 
+    ChangeVisibility(isVisible, density) {
+        val parentList = colors.chunked(rowElementsCount)
+        Column(modifier = Modifier.padding(16.dp, 0.dp)) {
+            parentList.forEachIndexed { _, colorRow ->
+                ColorRow(
+                    rowElementsCount = rowElementsCount,
+                    colorRow = colorRow,
+                    colorIntensity = colorIntensity,
+                    defaultColor = defaultColor
+                ) { colorRow, color ->
+                    subColorsRowVisibility =
+                        subColorsRowVisibility == false || defaultColor.value != color.value
+                    defaultColor = color
+                    defaultRow = colorRow
+                }
+
+            }
+            ChangeVisibility(
+                subColorsRowVisibility,
+                density
+            ) {
+                
+                val parentList = defaultRow.chunked(rowElementsCount)
+                Column {
+                    Spacer(modifier = Modifier.fillMaxWidth().height(16.dp))
+                    parentList.forEachIndexed { _, colorRow ->
+                        SubColorRow(
+                            rowElementsCount = rowElementsCount,
+                            colorRow = colorRow,
+                            defaultColor = defaultColor
+                        ) {
+                            defaultColor = it
+                            clickedColor(it)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ColumnScope.ColorRow(
+    rowElementsCount: Int,
+    colorRow: List<List<Color>>,
+    colorIntensity: Int,
+    defaultColor: Color,
+    clickedColor: (List<Color>, Color) -> Unit
+) {
+    Row {
+        repeat(rowElementsCount) { rowIndex ->
+            if (colorRow.size - 1 < rowIndex) {
+                Spacer(Modifier.weight(1f, true))
+                return@repeat
+            }
+            val color = colorRow[rowIndex]
+            ColorDots(
+                color[colorIntensity],
+                color.contains(defaultColor),
+                24.dp,
+                36.dp
+            ) {
+                clickedColor(color, it)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun SubColorRow(
+    rowElementsCount: Int,
+    colorRow: List<Color>,
+    defaultColor: Color,
+    clickedColor: (Color) -> Unit
+) {
+    Row {
+        repeat(rowElementsCount) { rowIndex ->
+            if (colorRow.size - 1 < rowIndex) {
+                Spacer(Modifier.weight(1f, true))
+                return@repeat
+            }
+            val color = colorRow[rowIndex]
+            ColorDots(
+                color,
+                color == defaultColor,
+                24.dp,
+                36.dp, clickedColor = clickedColor
+            )
+        }
+    }
+}
+
+
+@Composable
+internal fun ChangeVisibility(
+    isVisible: Boolean,
+    density: Density,
+    content: @Composable() AnimatedVisibilityScope.() -> Unit
+) {
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically {
@@ -63,33 +167,9 @@ fun RangVikalp(
         ),
         exit = slideOutVertically() + shrinkVertically(
             shrinkTowards = Alignment.Top
-        ) + fadeOut()
-    ) {
-        val parentList = colors.chunked(rowElementsCount)
-
-        Column(modifier = Modifier.padding(16.dp, 0.dp)) {
-            parentList.forEachIndexed { _, colorRow ->
-                Row {
-                    repeat(rowElementsCount) { rowIndex ->
-                        if (colorRow.size - 1 < rowIndex) {
-                            Spacer(Modifier.weight(1f, true))
-                            return@repeat
-                        }
-                        val color = colorRow[rowIndex]
-                        ColorDots(
-                            color,
-                            color == defaultColor.value,
-                            24.dp,
-                            36.dp,
-                        ) {
-                            defaultColor.value = it
-                            clickedColor(color)
-                        }
-                    }
-                }
-            }
-        }
-    }
+        ) + fadeOut(),
+        content = content
+    )
 }
 
 
