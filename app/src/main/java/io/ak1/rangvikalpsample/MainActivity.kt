@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.ak1.rangvikalp.RangVikalp
-import io.ak1.rangvikalp.colors500
 import io.ak1.rangvikalpsample.ui.theme.RangVikalpSampleTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,7 +35,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String) {
     var isVisible by remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
     Column(
         Modifier
@@ -57,7 +56,7 @@ fun Greeting(name: String) {
                 .fillMaxWidth()
                 .height(16.dp)
         )
-        RangVikalp(isVisible = isVisible, 8, colors500.asList()) {
+        RangVikalp(isVisible = isVisible) {
         }
 
     }
