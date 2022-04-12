@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 fun RangVikalp(
     isVisible: Boolean,
     rowElementsCount: Int = 8,
+    showShades: Boolean = true,
     colors: List<List<Color>> = colorArray,
     clickedColor: (Color) -> Unit
 ) {
@@ -55,6 +56,39 @@ fun RangVikalp(
     ChangeVisibility(isVisible, density) {
         val parentList = colors.chunked(rowElementsCount)
         Column(modifier = Modifier.padding(16.dp, 0.dp)) {
+
+            if (showShades) {
+                ChangeVisibility(
+                    subColorsRowVisibility,
+                    density
+                ) {
+                    val parentList = defaultRow.chunked(rowElementsCount)
+
+                    Column {
+
+                        parentList.forEachIndexed { _, colorRow ->
+                            SubColorRow(
+                                rowElementsCount = rowElementsCount,
+                                colorRow = colorRow,
+                                defaultColor = defaultColor
+                            ) {
+                                defaultColor = it
+                                clickedColor(it)
+                            }
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(16.dp)
+                        )
+                    }
+
+                }
+            }
+
+
+
+
             parentList.forEachIndexed { _, colorRow ->
                 ColorRow(
                     rowElementsCount = rowElementsCount,
@@ -66,29 +100,13 @@ fun RangVikalp(
                         subColorsRowVisibility == false || defaultColor.value != color.value
                     defaultColor = color
                     defaultRow = colorRow
+                    if (!showShades)
+                        clickedColor(color)
+
                 }
 
             }
-            ChangeVisibility(
-                subColorsRowVisibility,
-                density
-            ) {
-                
-                val parentList = defaultRow.chunked(rowElementsCount)
-                Column {
-                    Spacer(modifier = Modifier.fillMaxWidth().height(16.dp))
-                    parentList.forEachIndexed { _, colorRow ->
-                        SubColorRow(
-                            rowElementsCount = rowElementsCount,
-                            colorRow = colorRow,
-                            defaultColor = defaultColor
-                        ) {
-                            defaultColor = it
-                            clickedColor(it)
-                        }
-                    }
-                }
-            }
+
         }
     }
 }
