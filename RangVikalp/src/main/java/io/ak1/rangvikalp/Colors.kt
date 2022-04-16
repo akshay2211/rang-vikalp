@@ -18,6 +18,10 @@ package io.ak1.rangvikalp
 
 import androidx.compose.ui.graphics.Color
 
+/**
+ * ColorShades to be used in RangVikalp
+ * */
+
 val red = listOf(
     Color(0xFFFFEBEE),
     Color(0xFFFFCDD2),
