@@ -16,19 +16,11 @@
 
 package io.ak1.rangvikalp
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -36,15 +28,20 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RangVikalp(
     isVisible: Boolean,
-    rowElementsCount: Int = 8,
-    showShades: Boolean = true,
+    rowElementsCount: Int = defaultRowElementsCount,
+    showShades: Boolean = false,
+    colorIntensity: Int = defaultColorIntensity,
+    unSelectedSize: Dp = defaultUnSelectedSize,
+    selectedSize: Dp = defaultSelectedSize,
     colors: List<List<Color>> = colorArray,
+    defaultColor: Color = defaultSelectedColor,
     clickedColor: (Color) -> Unit
 ) {
-    val colorIntensity = 5
+    val colorIntensity = if (colorIntensity in 10..-1) defaultColorIntensity else colorIntensity
     val density = LocalDensity.current
+
     var defaultColor by remember {
-        mutableStateOf(colors[0][colorIntensity])
+        mutableStateOf(defaultColor)
     }
     var defaultRow by remember {
         mutableStateOf(colors[0])
@@ -62,6 +59,9 @@ fun RangVikalp(
                     subColorsRowVisibility,
                     density
                 ) {
+                    if (!defaultRow.contains(defaultColor)) {
+                        defaultRow = colors.first { it.contains(defaultColor) }
+                    }
                     val parentList = defaultRow.chunked(rowElementsCount)
 
                     Column {
@@ -70,7 +70,9 @@ fun RangVikalp(
                             SubColorRow(
                                 rowElementsCount = rowElementsCount,
                                 colorRow = colorRow,
-                                defaultColor = defaultColor
+                                defaultColor = defaultColor,
+                                unSelectedSize = unSelectedSize,
+                                selectedSize = selectedSize
                             ) {
                                 defaultColor = it
                                 clickedColor(it)
@@ -85,135 +87,38 @@ fun RangVikalp(
 
                 }
             }
-
-
-
-
             parentList.forEachIndexed { _, colorRow ->
                 ColorRow(
                     rowElementsCount = rowElementsCount,
                     colorRow = colorRow,
                     colorIntensity = colorIntensity,
-                    defaultColor = defaultColor
+                    defaultColor = defaultColor,
+                    unSelectedSize = unSelectedSize,
+                    selectedSize = selectedSize
                 ) { colorRow, color ->
                     subColorsRowVisibility =
                         subColorsRowVisibility == false || defaultColor.value != color.value
                     defaultColor = color
                     defaultRow = colorRow
-                    if (!showShades)
+                    if (subColorsRowVisibility)
                         clickedColor(color)
-
                 }
-
-            }
-
-        }
-    }
-}
-
-@Composable
-internal fun ColumnScope.ColorRow(
-    rowElementsCount: Int,
-    colorRow: List<List<Color>>,
-    colorIntensity: Int,
-    defaultColor: Color,
-    clickedColor: (List<Color>, Color) -> Unit
-) {
-    Row {
-        repeat(rowElementsCount) { rowIndex ->
-            if (colorRow.size - 1 < rowIndex) {
-                Spacer(Modifier.weight(1f, true))
-                return@repeat
-            }
-            val color = colorRow[rowIndex]
-            ColorDots(
-                color[colorIntensity],
-                color.contains(defaultColor),
-                24.dp,
-                36.dp
-            ) {
-                clickedColor(color, it)
             }
         }
     }
 }
 
-@Composable
-internal fun SubColorRow(
-    rowElementsCount: Int,
-    colorRow: List<Color>,
-    defaultColor: Color,
-    clickedColor: (Color) -> Unit
-) {
-    Row {
-        repeat(rowElementsCount) { rowIndex ->
-            if (colorRow.size - 1 < rowIndex) {
-                Spacer(Modifier.weight(1f, true))
-                return@repeat
-            }
-            val color = colorRow[rowIndex]
-            ColorDots(
-                color,
-                color == defaultColor,
-                24.dp,
-                36.dp, clickedColor = clickedColor
-            )
-        }
-    }
-}
+private const val defaultColorIntensity = 5
+private const val defaultRowElementsCount = 8
+private val defaultUnSelectedSize = 26.dp
+private val defaultSelectedSize = 36.dp
+
+//Kept public to be used by host app to preSelected color
+val defaultSelectedColor = colorArray[0][defaultColorIntensity]
 
 
-@Composable
-internal fun ChangeVisibility(
-    isVisible: Boolean,
-    density: Density,
-    content: @Composable() AnimatedVisibilityScope.() -> Unit
-) {
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically {
-            // Slide in from 40 dp from the top.
-            with(density) {
-                -40.dp.roundToPx()
-            }
-        } + expandVertically(
-            // Expand from the top.
-            expandFrom = Alignment.Top
-        ) + fadeIn(
-            // Fade in with the initial alpha of 0.3f.
-            initialAlpha = 0.3f
-        ),
-        exit = slideOutVertically() + shrinkVertically(
-            shrinkTowards = Alignment.Top
-        ) + fadeOut(),
-        content = content
-    )
-}
 
 
-@Composable
-internal fun RowScope.ColorDots(
-    color: Color,
-    selected: Boolean,
-    defaultSize: Dp,
-    expandedSize: Dp,
-    dotDescription: String = stringResource(id = R.string.color_dot),
-    clickedColor: (Color) -> Unit
-) {
-    val dbAnimateAsState: Dp by animateDpAsState(
-        targetValue = if (selected) expandedSize else defaultSize
-    )
-    IconButton(
-        onClick = {
-            clickedColor(color)
-        }, modifier = Modifier
-            .weight(1f, true)
-    ) {
-        Icon(
-            painterResource(id = R.drawable.ic_color),
-            contentDescription = dotDescription,
-            tint = color,
-            modifier = Modifier.size(dbAnimateAsState)
-        )
-    }
-}
+
+
+
