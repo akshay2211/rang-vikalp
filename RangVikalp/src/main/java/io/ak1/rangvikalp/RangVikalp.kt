@@ -38,10 +38,13 @@ fun RangVikalp(
     isVisible: Boolean,
     rowElementsCount: Int = 8,
     showShades: Boolean = true,
+    colorIntensity: Int = 5,
+    unSelectedSize: Dp = 26.dp,
+    selectedSize: Dp = 36.dp,
     colors: List<List<Color>> = colorArray,
     clickedColor: (Color) -> Unit
 ) {
-    val colorIntensity = 5
+    val colorIntensity = if (colorIntensity in 10..-1) 5 else colorIntensity
     val density = LocalDensity.current
     var defaultColor by remember {
         mutableStateOf(colors[0][colorIntensity])
@@ -70,7 +73,9 @@ fun RangVikalp(
                             SubColorRow(
                                 rowElementsCount = rowElementsCount,
                                 colorRow = colorRow,
-                                defaultColor = defaultColor
+                                defaultColor = defaultColor,
+                                unSelectedSize = unSelectedSize,
+                                selectedSize = selectedSize
                             ) {
                                 defaultColor = it
                                 clickedColor(it)
@@ -85,24 +90,21 @@ fun RangVikalp(
 
                 }
             }
-
-
-
-
             parentList.forEachIndexed { _, colorRow ->
                 ColorRow(
                     rowElementsCount = rowElementsCount,
                     colorRow = colorRow,
                     colorIntensity = colorIntensity,
-                    defaultColor = defaultColor
+                    defaultColor = defaultColor,
+                    unSelectedSize = unSelectedSize,
+                    selectedSize = selectedSize
                 ) { colorRow, color ->
                     subColorsRowVisibility =
                         subColorsRowVisibility == false || defaultColor.value != color.value
                     defaultColor = color
                     defaultRow = colorRow
-                    if (!showShades)
+                    if (subColorsRowVisibility)
                         clickedColor(color)
-
                 }
 
             }
@@ -112,11 +114,13 @@ fun RangVikalp(
 }
 
 @Composable
-internal fun ColumnScope.ColorRow(
+internal fun ColorRow(
     rowElementsCount: Int,
     colorRow: List<List<Color>>,
     colorIntensity: Int,
     defaultColor: Color,
+    unSelectedSize: Dp,
+    selectedSize: Dp,
     clickedColor: (List<Color>, Color) -> Unit
 ) {
     Row {
@@ -129,8 +133,8 @@ internal fun ColumnScope.ColorRow(
             ColorDots(
                 color[colorIntensity],
                 color.contains(defaultColor),
-                24.dp,
-                36.dp
+                unSelectedSize,
+                selectedSize
             ) {
                 clickedColor(color, it)
             }
@@ -143,6 +147,8 @@ internal fun SubColorRow(
     rowElementsCount: Int,
     colorRow: List<Color>,
     defaultColor: Color,
+    unSelectedSize: Dp,
+    selectedSize: Dp,
     clickedColor: (Color) -> Unit
 ) {
     Row {
@@ -155,8 +161,8 @@ internal fun SubColorRow(
             ColorDots(
                 color,
                 color == defaultColor,
-                24.dp,
-                36.dp, clickedColor = clickedColor
+                unSelectedSize,
+                selectedSize, clickedColor = clickedColor
             )
         }
     }
@@ -195,13 +201,13 @@ internal fun ChangeVisibility(
 internal fun RowScope.ColorDots(
     color: Color,
     selected: Boolean,
-    defaultSize: Dp,
-    expandedSize: Dp,
+    unSelectedSize: Dp = 26.dp,
+    selectedSize: Dp = 36.dp,
     dotDescription: String = stringResource(id = R.string.color_dot),
     clickedColor: (Color) -> Unit
 ) {
     val dbAnimateAsState: Dp by animateDpAsState(
-        targetValue = if (selected) expandedSize else defaultSize
+        targetValue = if (selected) selectedSize else unSelectedSize
     )
     IconButton(
         onClick = {
