@@ -1,2 +1,7 @@
-# rang-vikalp
-Simple Color Picker in Jetpack Compose
+<img src="assets/logo.png"/>
+
+# RangVikalp
+Minimal Color Picker in Jetpack Compose
+
+## Demo
+<img src="assets/media.gif"/>
