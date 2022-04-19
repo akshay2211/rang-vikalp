@@ -57,7 +57,7 @@ or Maven:
 or ivy:
 ```xml
 <dependency org='io.ak1' name='rang-vikalp' rev='1.0.0-alpha02'>
-  <artifact name='drawbox' ext='pom' ></artifact>
+  <artifact name='rang-vikalp' ext='pom' ></artifact>
 </dependency>
 ```
 
