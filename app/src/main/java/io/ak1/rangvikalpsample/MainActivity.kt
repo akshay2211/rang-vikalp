@@ -4,11 +4,11 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices
@@ -24,13 +24,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            RangVikalpSampleTheme {
+            val isSystemInDarkTheme = isSystemInDarkTheme()
+            var darkTheme: Boolean by remember { mutableStateOf(isSystemInDarkTheme) }
+            RangVikalpSampleTheme(darkTheme = darkTheme) {
+                var statusBarColor: Color by remember {
+                    mutableStateOf(Color.Transparent)
+                }
                 ProvideWindowInsets {
                     val systemUiController = rememberSystemUiController()
                     val darkIcons = MaterialTheme.colors.isLight
                     SideEffect {
                         systemUiController.setSystemBarsColor(
-                            Color.Transparent,
+                            statusBarColor,
                             darkIcons = darkIcons
                         )
                     }
@@ -39,7 +44,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colors.background
                     ) {
-                        RangVikalpComposable()
+                        RangVikalpComposable {
+                            darkTheme = it
+                        }
                     }
                 }
             }
@@ -55,6 +62,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     RangVikalpSampleTheme {
-        RangVikalpComposable()
+        RangVikalpComposable {
+
+        }
+
     }
 }

@@ -114,7 +114,7 @@ private val defaultUnSelectedSize = 26.dp
 private val defaultSelectedSize = 36.dp
 
 //Kept public to be used by host app to preSelected color
-val defaultSelectedColor = colorArray[0][defaultColorIntensity]
+val defaultSelectedColor = colorArray[6][defaultColorIntensity]
 
 
 
