@@ -2,6 +2,7 @@
 
 # RangVikalp
 Minimal Color Picker in Jetpack Compose
+
 [![Maven Central](https://img.shields.io/maven-central/v/io.ak1/rang-vikalp?style=flat-square)](https://search.maven.org/artifact/io.ak1/rang-vikalp)
 
 ## Demo
