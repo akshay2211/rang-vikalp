@@ -35,6 +35,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion compose_version
     }
+    namespace 'io.ak1.rangvikalp'
 }
 
 dependencies {

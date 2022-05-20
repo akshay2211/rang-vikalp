@@ -82,20 +82,24 @@ fun data(
             showHide
         )
     )
-    add(Texts("Can i choose a specific shade too,\nfor any color?", Arrangement.Start) {})
-    add(
-        Texts(
-            "Click here to ${if (isShadesVisible) "hide" else "show"} shades",
-            Arrangement.End,
-            shadesView
+    if (isVisible) {
+        add(Texts("Can i choose a specific shade too,\nfor any color?", Arrangement.Start) {})
+        add(
+            Texts(
+                "Click here to ${if (isShadesVisible) "hide" else "show"} shades",
+                Arrangement.End,
+                shadesView
+            )
         )
-    )
-    add(
-        Texts(
-            "Can i see this in a ${if (!isDarkTheme) "Dark" else "Light"} theme?",
-            Arrangement.Start
-        ) {})
-    add(Texts("Click here to switch to change theme", Arrangement.End, theme))
+        if (isShadesVisible) {
+            add(
+                Texts(
+                    "Can i see this in a ${if (!isDarkTheme) "Dark" else "Light"} theme?",
+                    Arrangement.Start
+                ) {})
+            add(Texts("Click here to switch to change theme", Arrangement.End, theme))
+        }
+    }
 }
 
 
