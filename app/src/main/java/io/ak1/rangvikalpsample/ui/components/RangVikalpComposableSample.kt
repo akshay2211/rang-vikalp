@@ -98,7 +98,8 @@ fun RangVikalpComposable(themeCallback: (Boolean) -> Unit) {
                     }
                     RangVikalp(
                         isVisible = isVisible,
-                        showShades = isShadesVisible
+                        showShades = isShadesVisible,
+                        colorIntensity = if (isLight) 7 else 3
                     ) {
                         coroutine.launch {
                             async { color.animateTo(it, animationSpec = tween(1000)) }
