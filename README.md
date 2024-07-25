@@ -45,7 +45,7 @@ include in app level build.gradle
  }
  ```
 ```groovy
- implementation  'o.ak1:rang-vikalp:1.0.0-alpha02'
+ implementation  'io.ak1:rang-vikalp:1.0.0-alpha02'
 ```
 or Maven:
 ```xml
