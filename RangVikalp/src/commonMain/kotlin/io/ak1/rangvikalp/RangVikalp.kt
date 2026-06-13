@@ -6,127 +6,114 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
-
 package io.ak1.rangvikalp
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.distinctUntilChanged
 
-
+/**
+ * RangVikalp — an HSV color picker.
+ *
+ * Modeled after a modern design-tool color picker:
+ *  • Saturation/Value box with draggable thumb
+ *  • Hue + Alpha sliders
+ *  • Eyedropper button + HEX value + opacity %
+ *  • Preset color palette + shuffle
+ *
+ * State is hoisted via [RangVikalpState] so the host can read the live color,
+ * react to changes, or push a new color into the picker programmatically.
+ * Every internal piece ([SaturationValueBox], [HueSlider], [AlphaSlider],
+ * [EyedropperButton], [HexRow], [PresetsRow]) is also exposed individually for
+ * custom layouts.
+ *
+ * @param state         hoisted picker state; create with [rememberRangVikalpState]
+ * @param presets       row of quick-pick swatches at the bottom
+ * @param colors        light/dark theming for the picker chrome
+ * @param onEyedropper  invoked when the eyedropper button is tapped. Color
+ *                      sampling is platform-specific so the host implements
+ *                      it and calls [RangVikalpState.setFromColor] when done.
+ *                      Null hides the eyedropper button entirely.
+ * @param onColorChange called whenever the picked color changes
+ */
 @Composable
 fun RangVikalp(
-    isVisible: Boolean,
-    rowElementsCount: Int = defaultRowElementsCount,
-    showShades: Boolean = false,
-    colorIntensity: Int = defaultColorIntensity,
-    unSelectedSize: Dp = defaultUnSelectedSize,
-    selectedSize: Dp = defaultSelectedSize,
-    colors: List<List<Color>> = colorArray,
-    defaultColor: Color = defaultSelectedColor,
-    clickedColor: (Color) -> Unit
+    modifier: Modifier = Modifier,
+    state: RangVikalpState = rememberRangVikalpState(),
+    presets: List<Color> = defaultRangVikalpPresets,
+    colors: RangVikalpColors = defaultRangVikalpColors(),
+    onColorChange: (Color) -> Unit = {},
 ) {
-    val colorIntensity = if (colorIntensity in 10..-1) defaultColorIntensity else colorIntensity
-    val density = LocalDensity.current
-
-    var defaultColor by remember {
-        mutableStateOf(defaultColor)
-    }
-    var defaultRow by remember {
-        mutableStateOf(colors[0])
-    }
-    var subColorsRowVisibility by remember {
-        mutableStateOf(true)
+    // Emit only when the composed color actually changes — avoid duplicate
+    // callbacks while a drag is in progress on the same axis.
+    LaunchedEffect(state) {
+        snapshotFlow { state.color }
+            .distinctUntilChanged()
+            .collect { onColorChange(it) }
     }
 
-    ChangeVisibility(isVisible, density) {
-        val parentList = colors.chunked(rowElementsCount)
-        Column(modifier = Modifier.padding(16.dp, 0.dp)) {
-
-            if (showShades) {
-                ChangeVisibility(
-                    subColorsRowVisibility,
-                    density
-                ) {
-                    if (!defaultRow.contains(defaultColor)) {
-                        defaultRow = colors.first { it.contains(defaultColor) }
-                    }
-                    val parentList = defaultRow.chunked(rowElementsCount)
-
-                    Column {
-
-                        parentList.forEachIndexed { _, colorRow ->
-                            SubColorRow(
-                                rowElementsCount = rowElementsCount,
-                                colorRow = colorRow,
-                                defaultColor = defaultColor,
-                                unSelectedSize = unSelectedSize,
-                                selectedSize = selectedSize
-                            ) {
-                                defaultColor = it
-                                clickedColor(it)
-                            }
-                        }
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(16.dp)
-                        )
-                    }
-
-                }
-            }
-            parentList.forEachIndexed { _, colorRow ->
-                ColorRow(
-                    rowElementsCount = rowElementsCount,
-                    colorRow = colorRow,
-                    colorIntensity = colorIntensity,
-                    defaultColor = defaultColor,
-                    unSelectedSize = unSelectedSize,
-                    selectedSize = selectedSize
-                ) { colorRow, color ->
-                    subColorsRowVisibility =
-                        subColorsRowVisibility == false || defaultColor.value != color.value
-                    defaultColor = color
-                    defaultRow = colorRow
-                    if (subColorsRowVisibility)
-                        clickedColor(color)
-                }
+    PickerCard(colors = colors, modifier = modifier) {
+        SaturationValueBox(
+            state    = state,
+            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+        )
+        Spacer(Modifier.height(12.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                HueSlider(state = state)
+                AlphaSlider(state = state)
             }
         }
+        Spacer(Modifier.height(12.dp))
+        HexRow(state = state, colors = colors)
+        Spacer(Modifier.height(12.dp))
+        PresetsRow(
+            state    = state,
+            presets  = presets,
+            colors   = colors,
+        )
     }
 }
 
-private const val defaultColorIntensity = 5
-private const val defaultRowElementsCount = 8
-private val defaultUnSelectedSize = 26.dp
-private val defaultSelectedSize = 36.dp
-
-//Kept public to be used by host app to preSelected color
-val defaultSelectedColor = colorArray[6][defaultColorIntensity]
-
-
-
-
-
-
-
+@Composable
+private fun PickerCard(
+    colors: RangVikalpColors,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(colors.surface)
+            .border(1.dp, colors.border, RoundedCornerShape(28.dp))
+            .padding(14.dp),
+    ) {
+        Column { content() }
+    }
+}

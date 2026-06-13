@@ -1,7 +1,6 @@
 package io.ak1.rangvikalpsample
 
 import androidx.compose.animation.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,111 +18,85 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.ak1.rangvikalp.RangVikalp
-import io.ak1.rangvikalp.defaultSelectedColor
+import io.ak1.rangvikalp.defaultRangVikalpColors
+import io.ak1.rangvikalp.defaultRangVikalpPresets
+import io.ak1.rangvikalp.rememberRangVikalpState
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        val coroutine = rememberCoroutineScope()
-        val color = remember { Animatable(defaultSelectedColor) }
-        var pickerVisible by remember { mutableStateOf(true) }
-        var shadesVisible by remember { mutableStateOf(false) }
-        var lightMode by remember { mutableStateOf(true) }
-        val chevronRotation by animateFloatAsState(
-            targetValue = if (pickerVisible) 180f else 0f
-        )
+        val scope = rememberCoroutineScope()
+        var lightMode by remember { mutableStateOf(false) }
+        val pickerState = rememberRangVikalpState(defaultRangVikalpPresets[4])
+        val preview = remember { Animatable(pickerState.color) }
+
+        LaunchedEffect(pickerState) {
+            snapshotFlow { pickerState.color }
+                .distinctUntilChanged()
+                .collect { picked ->
+                    scope.launch { preview.animateTo(picked, tween(180)) }
+                }
+        }
+
+        val theme = defaultRangVikalpColors(dark = !lightMode)
 
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.background)
+                .background(theme.surface)
                 .safeContentPadding()
                 .fillMaxSize()
+                .padding(16.dp),
         ) {
             Surface(
-                color = color.value,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp)
+                color = preview.value,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp),
-                    contentAlignment = Alignment.Center
+                        .height(120.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "RangVikalp",
+                        text = "#${pickerState.hex6}",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
                     )
                 }
             }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = shadesVisible,
-                    onClick = { shadesVisible = !shadesVisible },
-                    label = { Text("Shades") }
-                )
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = lightMode,
                     onClick = { lightMode = !lightMode },
-                    label = { Text(if (lightMode) "Light" else "Dark") }
+                    label = { Text(if (lightMode) "Light" else "Dark") },
                 )
             }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextButton(onClick = { pickerVisible = !pickerVisible }) {
-                    Text(
-                        text = "▲",
-                        color = color.value,
-                        modifier = Modifier.rotate(chevronRotation)
-                    )
-                    Text(
-                        text = if (pickerVisible) "  Hide picker" else "  Show picker",
-                        color = color.value
-                    )
-                }
-            }
-
+            Spacer(Modifier.weight(1f))
             RangVikalp(
-                isVisible = pickerVisible,
-                showShades = shadesVisible,
-                colorIntensity = if (lightMode) 7 else 3
-            ) { picked ->
-                coroutine.launch {
-                    color.animateTo(picked, animationSpec = tween(600))
-                }
-            }
+                state  = pickerState,
+                colors = theme,
+            )
         }
     }
 }
