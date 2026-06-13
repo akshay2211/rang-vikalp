@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidLint)
+    alias(libs.plugins.vanniktech.maven.publish)
 }
 
 kotlin {
@@ -92,4 +93,47 @@ kotlin {
         }
     }
 
+}
+
+
+mavenPublishing {
+    pom {
+        name.set("RangVikalp")
+        description.set(
+            "Kotlin Multiplatform colour picker built on Compose Multiplatform. " +
+                    "Ships a tabbed HSV picker plus drop-in components: saturation/value box & circle, " +
+                    "linear and arc hue / alpha sliders, preset swatch grid with shade expansion, hex + copy, " +
+                    "and a quick-pick presets row. Hoisted state, full dark/light theming, no extra " +
+                    "drawable resources. Runs on Android, iOS, Web (WASM/JS), and JVM from a single shared codebase."
+        )
+        inceptionYear.set("2022")
+        url.set("https://github.com/akshay2211/rang-vikalp")
+
+        licenses {
+            license {
+                name.set("Apache License 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("akshay2211")
+                name.set("Akshay Sharma")
+                email.set("fxn769@gmail.com")
+                url.set("https://akshay2211.github.io/")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/akshay2211/rang-vikalp")
+            connection.set("scm:git:git://github.com/akshay2211/rang-vikalp.git")
+            developerConnection.set("scm:git:git@github.com:akshay2211/rang-vikalp.git")
+        }
+
+        issueManagement {
+            system.set("Github")
+            url.set("https://github.com/akshay2211/rang-vikalp/issues")
+        }
+    }
 }

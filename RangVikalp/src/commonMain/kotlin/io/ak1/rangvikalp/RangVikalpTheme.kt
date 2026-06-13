@@ -26,6 +26,8 @@ data class RangVikalpColors(
     val onSurface: Color,
     /** Muted foreground (secondary labels, inactive chevrons). */
     val onSurfaceMuted: Color,
+    /** Selection accent — drives the ring around the picked preset swatch. */
+    val accent: Color,
 )
 
 @Composable
@@ -36,12 +38,14 @@ fun defaultRangVikalpColors(dark: Boolean = isSystemInDarkTheme()): RangVikalpCo
         border          = Color(0xFF2A2657),
         onSurface       = Color(0xFFE8E8F5),
         onSurfaceMuted  = Color(0xFF8E8AB8),
+        accent          = Color(0xFF7B5BFF),
     ) else RangVikalpColors(
         surface         = Color(0xFFFFFFFF),
         surfaceInset    = Color(0xFFFAFAFC),
         border          = Color(0xFFE5E5EA),
         onSurface       = Color(0xFF1A1A2E),
         onSurfaceMuted  = Color(0xFF8E8E93),
+        accent          = Color(0xFF6E5BFF),
     )
 
 /**
